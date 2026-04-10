@@ -55,6 +55,28 @@ export default function ResultsPage() {
     if (a.isCorrect) topicStats[topic].correct++;
   });
 
+  // Session-wise performance
+  const sessionStats = {};
+  answers.forEach(a => {
+    const session = a.session || 'Unknown';
+    const key = typeof session === 'number' ? `Session ${session}` : session;
+    if (!sessionStats[key]) sessionStats[key] = { correct: 0, total: 0, topics: new Set() };
+    sessionStats[key].total++;
+    if (a.isCorrect) sessionStats[key].correct++;
+    if (a.topic) sessionStats[key].topics.add(a.topic);
+  });
+
+  // Generate study recommendations
+  const weakTopics = Object.entries(topicStats)
+    .map(([topic, stats]) => ({ topic, pct: (stats.correct / stats.total) * 100, correct: stats.correct, total: stats.total }))
+    .filter(t => t.pct < 70)
+    .sort((a, b) => a.pct - b.pct);
+
+  const weakSessions = Object.entries(sessionStats)
+    .map(([session, stats]) => ({ session, pct: (stats.correct / stats.total) * 100, correct: stats.correct, total: stats.total, topics: [...stats.topics] }))
+    .filter(s => s.pct < 70)
+    .sort((a, b) => a.pct - b.pct);
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-3xl mx-auto">
@@ -157,6 +179,75 @@ export default function ResultsPage() {
                 })}
               </div>
             </div>
+
+            {/* Study Recommendations */}
+            {(weakTopics.length > 0 || weakSessions.length > 0) && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+                <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Recommended Focus Areas
+                </h3>
+
+                {weakTopics.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-amber-700 mb-2">Topics to Revise (scored below 70%):</div>
+                    <div className="space-y-1.5">
+                      {weakTopics.map(t => (
+                        <div key={t.topic} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100">
+                          <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                            t.pct === 0 ? 'bg-red-500' : t.pct < 50 ? 'bg-red-400' : 'bg-yellow-400'
+                          }`}></span>
+                          <span className="text-sm text-gray-800 flex-1">{t.topic}</span>
+                          <span className={`text-xs font-mono font-bold ${
+                            t.pct === 0 ? 'text-red-600' : t.pct < 50 ? 'text-red-500' : 'text-yellow-600'
+                          }`}>{t.correct}/{t.total} ({t.pct.toFixed(0)}%)</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {weakSessions.length > 0 && (
+                  <div>
+                    <div className="text-xs font-medium text-amber-700 mb-2">Sessions to Review:</div>
+                    <div className="space-y-1.5">
+                      {weakSessions.map(s => (
+                        <div key={s.session} className="bg-white rounded-lg px-3 py-2 border border-amber-100">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                              s.pct === 0 ? 'bg-red-500' : s.pct < 50 ? 'bg-red-400' : 'bg-yellow-400'
+                            }`}></span>
+                            <span className="text-sm text-gray-800 font-medium flex-1">{s.session}</span>
+                            <span className={`text-xs font-mono font-bold ${
+                              s.pct === 0 ? 'text-red-600' : s.pct < 50 ? 'text-red-500' : 'text-yellow-600'
+                            }`}>{s.correct}/{s.total} ({s.pct.toFixed(0)}%)</span>
+                          </div>
+                          {s.topics.length > 0 && (
+                            <div className="mt-1 ml-4 text-xs text-gray-500">
+                              Topics: {s.topics.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 text-xs text-amber-600 leading-relaxed">
+                  Focus your revision on the topics and sessions listed above. Re-attempt the assessment after studying these areas to track your improvement.
+                </div>
+              </div>
+            )}
+
+            {/* All topics passed */}
+            {weakTopics.length === 0 && weakSessions.length === 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
+                <div className="text-green-700 font-semibold text-sm">Excellent performance across all topics!</div>
+                <div className="text-green-600 text-xs mt-1">You scored 70% or above in every topic area.</div>
+              </div>
+            )}
 
             {/* Filter Tabs */}
             <div className="flex gap-2 mb-4 flex-wrap">

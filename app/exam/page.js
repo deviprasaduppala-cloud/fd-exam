@@ -292,12 +292,6 @@ export default function ExamPage() {
             >
               Calc
             </button>
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="bg-red-500 text-white px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold hover:bg-red-600 transition"
-            >
-              Submit
-            </button>
           </div>
         </div>
       </div>
@@ -458,6 +452,23 @@ export default function ExamPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Submit Button — always visible at the bottom */}
+          <div className="mt-4 bg-white rounded-xl shadow p-4 flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              <span className="font-medium text-gray-700">{answeredCount}</span> of{' '}
+              <span className="font-medium text-gray-700">{questions.length}</span> answered
+              {answeredCount < questions.length && (
+                <span className="text-amber-600 ml-2">({questions.length - answeredCount} remaining)</span>
+              )}
+            </div>
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="bg-red-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-600 transition"
+            >
+              Submit Assessment
+            </button>
           </div>
         </div>
       </div>
