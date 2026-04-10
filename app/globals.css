@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.timer-warning {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.question-nav-btn {
+  @apply w-10 h-10 rounded-lg text-sm font-semibold flex items-center justify-center transition-all cursor-pointer;
+}
+
+.question-nav-btn.answered {
+  @apply bg-green-500 text-white;
+}
+
+.question-nav-btn.skipped {
+  @apply bg-yellow-400 text-gray-900;
+}
+
+.question-nav-btn.current {
+  @apply ring-2 ring-blue-600 ring-offset-2;
+}
+
+.question-nav-btn.unattempted {
+  @apply bg-gray-200 text-gray-600 hover:bg-gray-300;
+}
+
+.lockdown-warning {
+  @apply fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-3 font-bold z-50;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
