@@ -11,6 +11,8 @@ export default function AdminPage() {
   const [showResultsToStudents, setShowResultsToStudents] = useState(false);
   const [timePerQuestion, setTimePerQuestion] = useState(120);
   const [timeInput, setTimeInput] = useState('120');
+  const [questionsPerExam, setQuestionsPerExam] = useState(20);
+  const [questionsInput, setQuestionsInput] = useState('20');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
@@ -60,6 +62,8 @@ export default function AdminPage() {
     setShowResultsToStudents(status.showResultsToStudents || false);
     setTimePerQuestion(status.timePerQuestion || 120);
     setTimeInput(String(status.timePerQuestion || 120));
+    setQuestionsPerExam(status.questionsPerExam || 20);
+    setQuestionsInput(String(status.questionsPerExam || 20));
     fetchAllowedStudents();
   };
 
@@ -85,6 +89,8 @@ export default function AdminPage() {
     setShowResultsToStudents(false);
     setTimePerQuestion(120);
     setTimeInput('120');
+    setQuestionsPerExam(20);
+    setQuestionsInput('20');
     setError('');
     setTab('results');
   };
@@ -134,6 +140,26 @@ export default function AdminPage() {
       }
     } catch {
       setError('Failed to update timer');
+    }
+  };
+
+  const updateQuestionsCount = async () => {
+    const val = parseInt(questionsInput);
+    if (isNaN(val) || val < 5 || val > 100) {
+      alert('Questions per exam must be between 5 and 100.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/exam-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, questionsPerExam: val }),
+      });
+      if (res.ok) {
+        setQuestionsPerExam(val);
+      }
+    } catch {
+      setError('Failed to update questions count');
     }
   };
 
@@ -403,6 +429,27 @@ export default function AdminPage() {
               </button>
             )}
             <span className="text-xs text-gray-400">(Current: {timePerQuestion}s = {Math.floor(timePerQuestion / 60)}m {timePerQuestion % 60}s per question)</span>
+
+            <span className="text-gray-300 mx-2">|</span>
+
+            <label className="text-sm text-gray-600">Questions per exam:</label>
+            <input
+              type="number"
+              value={questionsInput}
+              onChange={(e) => setQuestionsInput(e.target.value)}
+              min="5"
+              max="100"
+              className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm text-gray-900"
+            />
+            {parseInt(questionsInput) !== questionsPerExam && (
+              <button
+                onClick={updateQuestionsCount}
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+              >
+                Save
+              </button>
+            )}
+            <span className="text-xs text-gray-400">(Current: {questionsPerExam})</span>
           </div>
         </div>
       </div>

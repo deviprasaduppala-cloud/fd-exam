@@ -13,7 +13,7 @@ export async function POST(request) {
     // Check if exam is enabled and get config
     const { data: config } = await supabase
       .from('exam_config')
-      .select('exam_enabled, time_per_question')
+      .select('exam_enabled, time_per_question, questions_per_exam')
       .eq('id', 1)
       .single();
 
@@ -58,7 +58,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You have already taken the exam today.' }, { status: 403 });
     }
 
-    const questionsPerExam = parseInt(process.env.QUESTIONS_PER_EXAM || '20');
+    const questionsPerExam = config?.questions_per_exam || parseInt(process.env.QUESTIONS_PER_EXAM || '20');
     const timePerQuestion = config?.time_per_question || parseInt(process.env.TIME_PER_QUESTION || '120');
 
     // Get question IDs from previous attempts to exclude repeats

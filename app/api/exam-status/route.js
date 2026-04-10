@@ -5,12 +5,12 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('exam_config')
-      .select('exam_enabled, exam_title, show_results_to_students, time_per_question')
+      .select('exam_enabled, exam_title, show_results_to_students, time_per_question, questions_per_exam')
       .eq('id', 1)
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ enabled: false, title: 'Financial Derivatives Assessment', showResultsToStudents: false, timePerQuestion: 120 });
+      return NextResponse.json({ enabled: false, title: 'Financial Derivatives Assessment', showResultsToStudents: false, timePerQuestion: 120, questionsPerExam: 20 });
     }
 
     return NextResponse.json({
@@ -18,9 +18,10 @@ export async function GET() {
       title: data.exam_title,
       showResultsToStudents: data.show_results_to_students,
       timePerQuestion: data.time_per_question,
+      questionsPerExam: data.questions_per_exam,
     });
   } catch {
-    return NextResponse.json({ enabled: false, title: 'Financial Derivatives Assessment', showResultsToStudents: false, timePerQuestion: 120 });
+    return NextResponse.json({ enabled: false, title: 'Financial Derivatives Assessment', showResultsToStudents: false, timePerQuestion: 120, questionsPerExam: 20 });
   }
 }
 
@@ -37,6 +38,7 @@ export async function POST(request) {
     if (body.enabled !== undefined) updates.exam_enabled = body.enabled;
     if (body.showResultsToStudents !== undefined) updates.show_results_to_students = body.showResultsToStudents;
     if (body.timePerQuestion !== undefined) updates.time_per_question = body.timePerQuestion;
+    if (body.questionsPerExam !== undefined) updates.questions_per_exam = body.questionsPerExam;
 
     const { error } = await supabase
       .from('exam_config')

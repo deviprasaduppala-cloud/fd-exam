@@ -120,7 +120,7 @@ export default function Home() {
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
               <p className="font-medium text-gray-700">Instructions:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>20 MCQ questions with <strong>{examStatus?.timePerQuestion || 120} seconds per question</strong></li>
+                <li>{examStatus?.questionsPerExam || 20} MCQ questions with <strong>{examStatus?.timePerQuestion || 120} seconds per question</strong></li>
                 <li>Each question has its own independent timer</li>
                 <li>You may skip a question and return later — the timer for that question <strong>pauses when you leave it</strong> and <strong>resumes when you return</strong></li>
                 <li>If a question's timer runs out, you cannot answer it anymore</li>

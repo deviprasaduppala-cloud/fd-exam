@@ -29,12 +29,13 @@ CREATE TABLE exam_config (
   exam_title TEXT DEFAULT 'Financial Derivatives Assessment',   -- CHANGE THIS to your course name
   show_results_to_students BOOLEAN NOT NULL DEFAULT false,
   time_per_question INTEGER NOT NULL DEFAULT 120,
+  questions_per_exam INTEGER NOT NULL DEFAULT 20,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Insert default config (exam starts DISABLED — you enable it from admin dashboard)
-INSERT INTO exam_config (id, exam_enabled, exam_title, show_results_to_students, time_per_question)
-VALUES (1, false, 'Financial Derivatives Assessment', false, 120)           -- CHANGE THIS to your course name
+INSERT INTO exam_config (id, exam_enabled, exam_title, show_results_to_students, time_per_question, questions_per_exam)
+VALUES (1, false, 'Financial Derivatives Assessment', false, 120, 20)           -- CHANGE THIS to your course name
 ON CONFLICT (id) DO NOTHING;
 
 -- Table to store allowed students (for roll number validation)
