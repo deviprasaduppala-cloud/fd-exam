@@ -8,6 +8,7 @@ export default function ResultsPage() {
   const [reviewEnabled, setReviewEnabled] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [ranking, setRanking] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,11 +17,22 @@ export default function ResultsPage() {
       router.push('/');
       return;
     }
-    setResult(JSON.parse(stored));
+    const parsed = JSON.parse(stored);
+    setResult(parsed);
 
     fetch('/api/exam-status')
       .then(r => r.json())
       .then(data => setReviewEnabled(data.showResultsToStudents || false))
+      .catch(() => {});
+
+    // Fetch ranking
+    fetch('/api/my-rank', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rollNumber: parsed.rollNumber }),
+    })
+      .then(r => r.json())
+      .then(data => { if (data.rank) setRanking(data); })
       .catch(() => {});
   }, [router]);
 
@@ -132,6 +144,34 @@ export default function ResultsPage() {
             <div className="text-sm text-gray-500">Unanswered</div>
           </div>
         </div>
+
+        {/* Ranking Card */}
+        {ranking && (
+          <div className="bg-white rounded-xl shadow p-5 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700">Your Standing</h3>
+              <span className="text-xs text-gray-400">{ranking.total} students submitted</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-indigo-600">{ranking.rank}<span className="text-sm text-indigo-400">/{ranking.total}</span></div>
+                <div className="text-xs text-indigo-500 mt-0.5">Rank</div>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-purple-600">{ranking.percentile}%</div>
+                <div className="text-xs text-purple-500 mt-0.5">Percentile</div>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-blue-600">{ranking.classStats.average}%</div>
+                <div className="text-xs text-blue-500 mt-0.5">Class Avg</div>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-green-600">{ranking.classStats.highest}%</div>
+                <div className="text-xs text-green-500 mt-0.5">Highest</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Note */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center text-sm text-blue-700 mb-6">

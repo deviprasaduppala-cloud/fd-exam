@@ -16,10 +16,24 @@ export default function ExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
   const timerRef = useRef(null);
   const startTimeRef = useRef({});
+  const autoSaveRef = useRef(null);
+  const answersRef = useRef({});
+  const timersRef = useRef({});
+  const currentQRef = useRef(0);
+  const tabSwitchesRef = useRef(0);
+  const fullscreenExitsRef = useRef(0);
 
-  // Load exam data
+  // Keep refs in sync with state (needed for beforeunload handler)
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { timersRef.current = timers; }, [timers]);
+  useEffect(() => { currentQRef.current = currentQ; }, [currentQ]);
+  useEffect(() => { tabSwitchesRef.current = tabSwitches; }, [tabSwitches]);
+  useEffect(() => { fullscreenExitsRef.current = fullscreenExits; }, [fullscreenExits]);
+
+  // Load exam data from sessionStorage
   useEffect(() => {
     const stored = sessionStorage.getItem('examData');
     if (!stored) {
@@ -28,14 +42,70 @@ export default function ExamPage() {
     }
     const data = JSON.parse(stored);
     setExamData(data);
+    setSessionId(data.sessionId || null);
 
-    // Initialize timers for each question
-    const initialTimers = {};
-    data.questions.forEach((_, i) => {
-      initialTimers[i] = data.timePerQuestion;
-    });
-    setTimers(initialTimers);
+    if (data.resuming && data.savedTimers) {
+      // Resuming an existing session — restore saved state
+      setTimers(data.savedTimers);
+      setAnswers(data.savedAnswers || {});
+      setCurrentQ(data.savedCurrentQuestion || 0);
+      setTabSwitches(data.tabSwitches || 0);
+      setFullscreenExits(data.fullscreenExits || 0);
+    } else {
+      // Fresh exam — initialize timers
+      const initialTimers = {};
+      data.questions.forEach((_, i) => {
+        initialTimers[i] = data.timePerQuestion;
+      });
+      setTimers(initialTimers);
+    }
   }, [router]);
+
+  // Auto-save progress every 10 seconds
+  useEffect(() => {
+    if (!examData || !sessionId) return;
+
+    const saveProgress = () => {
+      fetch('/api/save-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          rollNumber: examData.rollNumber,
+          answers: answersRef.current,
+          timeRemaining: timersRef.current,
+          currentQuestion: currentQRef.current,
+          tabSwitches: tabSwitchesRef.current,
+          fullscreenExits: fullscreenExitsRef.current,
+        }),
+      }).catch(() => {}); // Silently fail — best effort
+    };
+
+    autoSaveRef.current = setInterval(saveProgress, 10000);
+    return () => clearInterval(autoSaveRef.current);
+  }, [examData, sessionId]);
+
+  // Save on page unload (window close / navigate away)
+  useEffect(() => {
+    if (!examData || !sessionId) return;
+
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for reliable delivery on page close
+      const data = JSON.stringify({
+        sessionId,
+        rollNumber: examData.rollNumber,
+        answers: answersRef.current,
+        timeRemaining: timersRef.current,
+        currentQuestion: currentQRef.current,
+        tabSwitches: tabSwitchesRef.current,
+        fullscreenExits: fullscreenExitsRef.current,
+      });
+      navigator.sendBeacon('/api/save-progress', new Blob([data], { type: 'application/json' }));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [examData, sessionId]);
 
   // Timer countdown for current question
   useEffect(() => {
@@ -158,6 +228,9 @@ export default function ExamPage() {
     if (submitting) return;
     setSubmitting(true);
 
+    // Stop auto-save
+    if (autoSaveRef.current) clearInterval(autoSaveRef.current);
+
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
@@ -192,6 +265,7 @@ export default function ExamPage() {
       answers: detailedAnswers,
       tabSwitches,
       fullscreenExits,
+      sessionId,
       timePerQuestion: Object.entries(timers).map(([i, remaining]) => ({
         question: parseInt(i),
         timeSpent: examData.timePerQuestion - remaining,
@@ -212,7 +286,7 @@ export default function ExamPage() {
     sessionStorage.setItem('examResult', JSON.stringify(submission));
     sessionStorage.removeItem('examData');
     router.push('/results');
-  }, [examData, answers, timers, tabSwitches, fullscreenExits, submitting, router]);
+  }, [examData, answers, timers, tabSwitches, fullscreenExits, submitting, router, sessionId]);
 
   if (!examData) {
     return (

@@ -45,13 +45,26 @@ export default function Home() {
       }
 
       // Store exam data in sessionStorage
-      sessionStorage.setItem('examData', JSON.stringify({
+      const examPayload = {
         name: name.trim(),
         rollNumber: rollNumber.trim(),
         questions: data.questions,
         startTime: Date.now(),
         timePerQuestion: data.timePerQuestion,
-      }));
+        sessionId: data.sessionId || null,
+        resuming: data.resuming || false,
+      };
+
+      // If resuming, include saved state
+      if (data.resuming) {
+        examPayload.savedAnswers = data.savedAnswers || {};
+        examPayload.savedTimers = data.savedTimers || {};
+        examPayload.savedCurrentQuestion = data.savedCurrentQuestion || 0;
+        examPayload.tabSwitches = data.tabSwitches || 0;
+        examPayload.fullscreenExits = data.fullscreenExits || 0;
+      }
+
+      sessionStorage.setItem('examData', JSON.stringify(examPayload));
 
       router.push('/exam');
     } catch (err) {
@@ -114,7 +127,7 @@ export default function Home() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading Questions...' : 'Start Assessment'}
+              {loading ? 'Loading...' : 'Start Assessment'}
             </button>
 
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
@@ -127,6 +140,7 @@ export default function Home() {
                 <li>Use the question navigation panel to jump between questions</li>
                 <li>The exam runs in <strong>fullscreen mode</strong> — do not exit</li>
                 <li>Switching tabs or windows is <strong>monitored and logged</strong></li>
+                <li>If you close the browser, your progress is saved and you can <strong>resume where you left off</strong> — but the timer for the question you were on continues to count down</li>
                 <li>All questions must be submitted at the end — unanswered questions are marked incorrect</li>
                 <li>Scores are shown immediately after submission</li>
               </ul>

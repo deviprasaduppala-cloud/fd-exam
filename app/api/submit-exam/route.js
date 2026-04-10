@@ -5,7 +5,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    const { name, rollNumber, score, totalQuestions, percentage, answers, tabSwitches, fullscreenExits, timePerQuestion } = body;
+    const { name, rollNumber, score, totalQuestions, percentage, answers, tabSwitches, fullscreenExits, timePerQuestion, sessionId } = body;
 
     if (!name || !rollNumber || score === undefined) {
       return NextResponse.json({ error: 'Invalid submission data.' }, { status: 400 });
@@ -30,6 +30,23 @@ export async function POST(request) {
     if (error) {
       console.error('Supabase insert error:', error);
       return NextResponse.json({ error: 'Failed to save submission.' }, { status: 500 });
+    }
+
+    // Mark the exam session as completed
+    if (sessionId) {
+      await supabase
+        .from('exam_sessions')
+        .update({ is_completed: true, last_active_at: new Date().toISOString() })
+        .eq('id', sessionId);
+    } else {
+      // Fallback: mark any active session for this student today as completed
+      const today = new Date().toISOString().split('T')[0];
+      await supabase
+        .from('exam_sessions')
+        .update({ is_completed: true, last_active_at: new Date().toISOString() })
+        .eq('roll_number', rollNumber)
+        .eq('exam_date', today)
+        .eq('is_completed', false);
     }
 
     return NextResponse.json({ success: true, id: data?.[0]?.id });
