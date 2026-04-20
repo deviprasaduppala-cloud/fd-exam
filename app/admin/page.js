@@ -464,6 +464,15 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 pt-3">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-lg flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="ml-4 text-red-400 hover:text-red-600 font-bold">✕</button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 pt-4">
         <div className="flex gap-1 bg-gray-200 rounded-lg p-1 w-fit">
