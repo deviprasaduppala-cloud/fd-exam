@@ -34,7 +34,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const updates = { updated_at: new Date().toISOString() };
+    const updates = {};
     if (body.enabled !== undefined) updates.exam_enabled = body.enabled;
     if (body.showResultsToStudents !== undefined) updates.show_results_to_students = body.showResultsToStudents;
     if (body.timePerQuestion !== undefined) updates.time_per_question = body.timePerQuestion;

@@ -103,7 +103,12 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, enabled: newState }),
       });
-      if (res.ok) setExamEnabled(newState);
+      if (res.ok) {
+        setExamEnabled(newState);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Toggle failed (${res.status})`);
+      }
     } catch {
       setError('Failed to toggle exam');
     }
@@ -117,7 +122,12 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, showResultsToStudents: newState }),
       });
-      if (res.ok) setShowResultsToStudents(newState);
+      if (res.ok) {
+        setShowResultsToStudents(newState);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Toggle failed (${res.status})`);
+      }
     } catch {
       setError('Failed to toggle review');
     }
