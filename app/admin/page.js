@@ -53,10 +53,20 @@ export default function AdminPage() {
   }, [password]);
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setAuthenticated(true);
-    await fetchResults();
-    const statusRes = await fetch('/api/exam-status');
+    const handleLogin = async (e) => {
+  e.preventDefault();
+  const statusRes = await fetch('/api/exam-status');
+  const status = await statusRes.json();
+  setExamEnabled(status.enabled);
+  setShowResultsToStudents(status.showResultsToStudents || false);
+  setTimePerQuestion(status.timePerQuestion || 120);
+  setTimeInput(String(status.timePerQuestion || 120));
+  setQuestionsPerExam(status.questionsPerExam || 20);
+  setQuestionsInput(String(status.questionsPerExam || 20));
+  setAuthenticated(true);
+  await fetchResults();
+  fetchAllowedStudents();
+};
     const status = await statusRes.json();
     setExamEnabled(status.enabled);
     setShowResultsToStudents(status.showResultsToStudents || false);
